@@ -14,25 +14,38 @@ class Classifier(nn.Module):
 
         # задай классификационный блок
         self.clf = nn.Sequential(
-            nn.Linear(512*8*8, 128),
-            nn.Sigmoid(),
-            nn.Linear(128, 3)
+            nn.Linear(512*8*8, 256),
+            nn.Tanh(),
+            nn.Linear(256, 3)
         )
 
         # задай регрессионный блок
         self.box = nn.Sequential(
-            nn.Linear(512*8*8, 128),
-            nn.Sigmoid(),
+            nn.Linear(512*8*8, 512),
+            nn.LeakyReLU(),
+            nn.Dropout(),
+            nn.Linear(512, 256),
+            nn.LeakyReLU(),
+            nn.Dropout(),
+            nn.Linear(256, 128),
+            nn.LeakyReLU(),
             nn.Linear(128, 4),
             nn.Sigmoid()
-        )   
+        ) 
 
     def forward(self, img):
         # задай прямой проход
-        resnet_out = self.feature_extractor(img)
-        resnet_out = resnet_out.view(resnet_out.size(0), -1)
-        pred_classes = self.clf(resnet_out)
-        pred_boxes = self.box(resnet_out)
-        print(pred_classes.shape, pred_boxes.shape)
-        return pred_classes, pred_boxes
+        embedding = self.feature_extractor(img)
+        logits = self.clf(torch.flatten(embedding, 1))
+        box_coords = self.box(torch.flatten(embedding, 1))
+        return logits, box_coords
+
+       # resnet_out = self.feature_extractor(img)
+       # resnet_out = resnet_out.view(resnet_out.size(0), -1)
+       # pred_classes = self.clf(resnet_out)
+       # pred_boxes = self.box(resnet_out)
+       # print(pred_classes.shape, pred_boxes.shape)
+       # return pred_classes, pred_boxes
+    
+
     
