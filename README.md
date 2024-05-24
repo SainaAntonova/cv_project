@@ -32,13 +32,13 @@
 - **Объем выборки**: 13,435 изображений
 - **Метрики**:
   - mAP50: 0.5683,\n  - mAP50-95: 0.30734
-  ![График результатов](./notebooks/model/yolov5/runs/detect/train2/results.png)
+  ![График результатов](./notebooks/model/yolo_runs/detect/train2/results.png)
    
   - График Precision-Recall кривой
-  ![PRcurve](./notebooks/model/yolov5/runs/detect/train2/PR_curve.png)
+  ![PRcurve](./notebooks/model/yolo_runs/detect/train2/PR_curve.png)
 
   - Confusion Matrix
-  ![ConfMatrix](./notebooks/model/yolov5/runs/detect/train2/confusion_matrix.png)
+  ![ConfMatrix](./notebooks/model/yolo_runs/detect/train2/confusion_matrix.png)
 
 
 ## Информация об обучении модели Unet
