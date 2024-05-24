@@ -1,12 +1,10 @@
 import streamlit as st
-import cv2
 import numpy as np 
 from PIL import Image
 from io import BytesIO
 import requests
 from ultralytics import YOLO
-import os
-import torch
+
 from torchvision import transforms
 
 st.image("https://blogs.mathworks.com/deep-learning/files/2022/02/Cover.png", use_column_width=True)
