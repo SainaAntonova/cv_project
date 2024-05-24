@@ -1,5 +1,8 @@
 import streamlit as st
 
+st.set_page_config(layout="wide")
+
+
 st.markdown("""
     <style>
         .title {
@@ -16,14 +19,11 @@ st.markdown("""
 st.image("https://static.vecteezy.com/system/resources/thumbnails/021/938/316/small_2x/artificial-intelligence-icon-element-design-illustration-ai-technology-and-cyber-icon-element-futuristic-technology-service-and-communication-artificial-intelligence-concept-free-png.png", use_column_width=True)
 st.markdown('<h1 class="title">📷Computer vision project • Mask-RCNN team </h1>', unsafe_allow_html=True)
 
-
-
-
 st.write("""
          **Навигация по проекту:**
-         - **[Локализация объектов](#object-detection):** В данном разделе реализована локализация объектов с использованием модели Mask-RCNN.
+         - **[Локализация объектов](localisation):** В данном разделе реализована локализация объектов с использованием модели Mask-RCNN.
          - **[Детекция объектов](yolo_ships):** В этом разделе применена модель YOLOv8 для детекции кораблей на аэроснимках.
-         - **[Семантическая сегментация](#unet-segmentation):** Здесь используется модель Unet для сегментации объектов на аэроснимках.
+         - **[Семантическая сегментация](forest_segmentation):** Здесь используется модель Unet для сегментации объектов на аэроснимках.
          """)
 
 
@@ -34,4 +34,4 @@ st.write("""
          - **[Игорь Свиланович](https://github.com/svilanovich)**
          """)
 
-from pages import yolo_ships, unet_segmentation
+# from pages import yolo_ships, unet_segmentation, localisation
