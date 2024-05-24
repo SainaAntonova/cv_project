@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image
 from io import BytesIO
 import requests
+from ultralytics import YOLO
 import os
 import torch
 from torchvision import transforms
@@ -35,22 +36,28 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # Отображение заголовка
-st.markdown('<h1 class="title">⛴️📡📷 YOLOv5 </h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="title">⛴️📡📷 YOLOv8🛰️🛳️</h1>', unsafe_allow_html=True)
 st.write("""
          
-    Модель YOLOv5 была обучена на датасете [KAGGLE - Ships/Vessels in Aerial Images](https://www.kaggle.com/datasets/siddharthkumarsah/ships-in-aerial-images/code)
+    Модель YOLOv8 была обучена на датасете [KAGGLE - Ships/Vessels in Aerial Images](https://www.kaggle.com/datasets/siddharthkumarsah/ships-in-aerial-images/code)
     """)
 
-st.write('## Информация об обучении')
-st.write('- Число эпох обучения: 100')
-st.write('- Число классов: 1 - корабль')
-st.write('- Объем выборки: 13 435 изображений')
-st.write('- Метрики:')
-st.write('  - mAP (Mean Average Precision)')
+with st.expander("Информация об обучении"):
+    st.write('## Информация об обучении')
+    st.write('- Число классов: 1 - корабль')
+    st.write('- Объем выборки: 13 435 изображений')
+    
+    st.image('cv_project/notebooks/model/yolov5/runs/detect/train2/val_batch1_labels.jpg')
 
-st.write('  - График Percision-Recall кривой')
-
-st.write('  - Confusion Matrix')
+    st.write('#### Метрики:')
+    st.write('  - mAP50: 0.5683,\n  - mAP50-95: 0.30734')
+    st.image('cv_project/notebooks/model/yolov5/runs/detect/train2/results.png')
+    st.write('  - График Percision-Recall кривой')
+    st.image('cv_project/notebooks/model/yolov5/runs/detect/train2/PR_curve.png')
+    st.write('  - Confusion Matrix')
+    st.image('cv_project/notebooks/model/yolov5/runs/detect/train2/confusion_matrix.png')
+    st.write('F1-кривая')
+    st.image('cv_project/notebooks/model/yolov5/runs/detect/train2/F1_curve.png')
 
 
 
@@ -65,7 +72,7 @@ with st.sidebar:
     image = None
     if upload_type == "Из файла":
         files = st.file_uploader(
-            "Загрузите свои картинки", type=["jpg", "jpeg", "png"], accept_multiple_files=True
+            "Загрузите из папки или перетащите свои картинки", type=["jpg", "jpeg", "png"], accept_multiple_files=True
         )
         if files:
             image = [file.getvalue() for file in files]
@@ -92,15 +99,14 @@ else:
 
 
 @st.cache_resource()
-# def load_model(weights_path='path/to/your/best.pt'):
-    
-#     model = torch.hub.load('ultralytics/yolov5', 'custom', path=weights_path, force_reload=True)
-#     return model
-
-def load_model():
-    
-    model = torch.hub.load('ultralytics/yolov5', 'yolov5s')  # Загрузка YOLOv5s
+def load_model(weights_path='cv_project/notebooks/model/yolov5/runs/detect/train2/weights/best.pt'):
+    model = YOLO(weights_path)
     return model
+
+# def load_model():
+    
+#     model = torch.hub.load('ultralytics/yolov5', 'yolov5s')  # Загрузка YOLOv5s
+#     return model
 
 model = load_model()
 
@@ -125,6 +131,7 @@ def load_image(image_file):
 if image:
     images = [Image.open(BytesIO(image)) for image in image]
     predictions = [predict(image) for image in images]
+    # predictions = [predict(np.array(image)) for image in images]
     
     for image, prediction in zip(images, predictions):
         col1, col2= st.columns(2)
@@ -133,7 +140,7 @@ if image:
             st.image(image, caption='Оригинальное изображение', use_column_width=True)
         with col2:
             # Отображение изображения с детекцией объектов
-            detected_image = Image.fromarray(prediction.render()[0])
+            detected_image = prediction[0].plot()  # Получаем изображение с детекцией объектов
             st.image(detected_image, caption='Обнаруженные объекты', use_column_width=True)
 
     st.image("https://media0.giphy.com/media/9xnNG7EN2h822ithtT/giphy.gif?cid=6c09b952jkeqsu1vzio1sr6gr67m941155ubajei5yltumvk&ep=v1_gifs_search&rid=giphy.gif&ct=g", use_column_width=True)
