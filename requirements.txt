@@ -1,18 +1,10 @@
-streamlit
-tensorflow
-numpy
-pillow
-opencv-python
-ultralytics
-torch 
-
-click==8
 
 
 streamlit==1.35.0
+tensorflow
 numpy==1.26.4
 Pillow==10.3.0
-
+opencv-python
 ultralytics==8.2.20
 torch==2.3.0
-
+click==8
