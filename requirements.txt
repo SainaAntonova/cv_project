@@ -2,5 +2,6 @@ streamlit
 tensorflow
 numpy
 pillow
+opencv-python
 
 click==8
