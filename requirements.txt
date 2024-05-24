@@ -5,4 +5,5 @@ pillow
 opencv-python
 ultralytics
 torch 
+libgl1-mesa-glx
 click==8
