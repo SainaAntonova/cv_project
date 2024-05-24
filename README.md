@@ -1,29 +1,54 @@
 # cv_project
-
+![Logo](https://static.vecteezy.com/system/resources/thumbnails/021/938/316/small_2x/artificial-intelligence-icon-element-design-illustration-ai-technology-and-cyber-icon-element-futuristic-technology-service-and-communication-artificial-intelligence-concept-free-png.png)
 
 ## Описание
 
 Это приложение Streamlit позволяет пользователю загружать изображения различными способами и отображает результаты локализации, детекции и семантической сегментации объектов.
 
+## Интерфейс
+(СКРИНШОТ СТРАНИЦЫ)
+
 ## Использование
 
 1. Перейдите по адресу (ЗДЕСЬ ССЫЛКА НА СТРИМЛИТ).
-2. Выберите способ загрузки изображения в боковой панели:
+2. Выберите модель на боковой панели.
+3. Выберите способ загрузки изображения в боковой панели:
    - **Из файла**: загрузите одно или несколько изображений с вашего компьютера.
    - **Из URL**: введите URL изображения.
    - **Из вебкамеры**: сделайте снимок с помощью вебкамеры.
-3. Дождитесь загрузки изображения и отображения результата детекции объектов.
+4. Дождитесь загрузки изображения и отображения результата детекции объектов.
 
-## Информация об обучении модели YOLOv5
-- Модель была обучена на датасете [Ships/Vessels in Aerial Images](https://www.kaggle.com/datasets/siddharthkumarsah/ships-in-aerial-images/data).
-- **Число эпох обучения**: 100
+## Информация об обучении модели локализации
+- 
+- 
+- 
+- 
+- 
+
+
+## Информация об обучении модели YOLOv8
+- Обучена на датасете [Ships/Vessels in Aerial Images](https://www.kaggle.com/datasets/siddharthkumarsah/ships-in-aerial-images/data).
 - **Число классов**: 1 (корабль)
 - **Объем выборки**: 13,435 изображений
 - **Метрики**:
-  - mAP (Mean Average Precision)
+  - mAP50: 0.5683,\n  - mAP50-95: 0.30734
+  ![График результатов](./notebooks/model/yolov5/runs/detect/train2/results.png)
+   
   - График Precision-Recall кривой
-  - Confusion Matrix 
-  - бла бла бла
+  ![PRcurve](./notebooks/model/yolov5/runs/detect/train2/PR_curve.png)
+
+  - Confusion Matrix
+  ![ConfMatrix](./notebooks/model/yolov5/runs/detect/train2/confusion_matrix.png)
+
+
+
+## Информация об обучении модели Unet
+- 
+- 
+- 
+- 
+- 
+
 
 ## Команда проекта
 
