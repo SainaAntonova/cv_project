@@ -5,7 +5,7 @@ pillow
 opencv-python
 ultralytics
 torch 
-libgl1-mesa-glx
+
 click==8
 
 
@@ -15,4 +15,4 @@ Pillow==10.3.0
 opencv-python==4.9.0.80
 ultralytics==8.2.20
 torch==2.3.0
-libgl1-mesa-glx
+
