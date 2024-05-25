@@ -1,7 +1,9 @@
 import torch 
 from torch import nn
 from torchvision.models import ResNet18_Weights, resnet18
+import streamlit as st
 
+@st.cache_resource
 class Classifier(nn.Module):
     def __init__(self):
         super().__init__()
