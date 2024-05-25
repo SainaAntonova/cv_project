@@ -10,7 +10,7 @@
 
 ## Использование
 
-1. Перейдите по адресу на  [Sreamlit]([https://cvproject-ramvursmgqbwxflxvkwprr.streamlit.app/yolo_ships](https://cvproject-ramvursmgqbwxflxvkwprr.streamlit.app/).
+1. Перейдите по адресу на  [Sreamlit](https://cvproject-ramvursmgqbwxflxvkwprr.streamlit.app/).
 2. Выберите модель на боковой панели.
 3. Выберите способ загрузки изображения в боковой панели:
    - **Из файла**: загрузите одно или несколько изображений с вашего компьютера.
