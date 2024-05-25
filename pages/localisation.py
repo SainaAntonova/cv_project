@@ -6,8 +6,9 @@ from torchvision.models import ResNet18_Weights, resnet18
 from notebooks.model.loc_model.preprocessing import preprocess
 import cv2
 import numpy as np
+import glob
 
-import gdown
+# import gdown
 
 class Classifier(nn.Module):
     def __init__(self):
@@ -43,27 +44,48 @@ class Classifier(nn.Module):
         box_coords = self.box(torch.flatten(embedding, 1))
         return logits, box_coords
 
-@st.cache_data
+# @st.cache_data
+# def load_model():
+#     model = Classifier()
+#     # Загрузка состояния модели и оптимизатора
+#     url = 'https://drive.google.com/file/d/1Zv6ojBq4jFyXE0AKVvYb5RifEmQzRBVN/view?usp=sharing'
+    
+#     output = 'best.pth'  # Local filename to save the downloaded model
+#     gdown.download(url, output, quiet=False)  # Download the model
+#     checkpoint = torch.load(output) 
+
+    
+#     # checkpoint = torch.load('notebooks/model/loc_model/best.pth')
+#     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=.9)
+#     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[5, 10, 15, 20, 25])
+
+#     model.load_state_dict(checkpoint['model_state_dict'])
+#     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+#     lr_scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+#     start_epoch = checkpoint['epoch']
+#     log = checkpoint['log']
+#     model.eval()
+#     return model, start_epoch
+
+@st.cache_resource()
 def load_model():
+    
     model = Classifier()
-    # Загрузка состояния модели и оптимизатора
-    url = 'https://drive.google.com/file/d/1Zv6ojBq4jFyXE0AKVvYb5RifEmQzRBVN/view?usp=sharing'
-    
-    output = 'best.pth'  # Local filename to save the downloaded model
-    gdown.download(url, output, quiet=False)  # Download the model
-    checkpoint = torch.load(output) 
+    def load_model_parts(base_filename):
+        part_files = sorted(glob.glob('..\notebooks\model\loc_model'+ base_filename + '*.pth'))
 
-    
-    # checkpoint = torch.load('notebooks/model/loc_model/best.pth')
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=.9)
-    lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[5, 10, 15, 20, 25])
+        state_dict = {}
+        for part_file in part_files:
+            with open(part_file, 'rb') as f:
+                part_state_dict = torch.load(f, map_location='cpu')  # Load with PyTorch
+                state_dict.update(part_state_dict)
 
-    model.load_state_dict(checkpoint['model_state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-    lr_scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
-    start_epoch = checkpoint['epoch']
-    log = checkpoint['log']
+        return state_dict
+    
+    state_dict = load_model_parts('best')
+    model.load_state_dict(state_dict, strict=False)
     model.eval()
+    start_epoch =0
     return model, start_epoch
 
 model, start_epoch = load_model()
