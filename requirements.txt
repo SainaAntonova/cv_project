@@ -11,9 +11,6 @@ tqdm
 seaborn
 tensorboard
 ultralytics 
-
-
-pickle
 scipy
 pandas
 scikit_learn
