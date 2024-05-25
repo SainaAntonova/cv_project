@@ -3,3 +3,6 @@ torchvision
 ultralytics
 opencv-python
 matplotlib
+numpy
+pillow
+scikit-image
