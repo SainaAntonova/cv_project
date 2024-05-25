@@ -7,6 +7,8 @@ from notebooks.model.loc_model.preprocessing import preprocess
 import cv2
 import numpy as np
 
+import gdown
+
 class Classifier(nn.Module):
     def __init__(self):
         super().__init__()
@@ -45,7 +47,8 @@ class Classifier(nn.Module):
 def load_model():
     model = Classifier()
     # Загрузка состояния модели и оптимизатора
-    url = 'https://drive.google.com/file/d/1Zv6ojBq4jFyXE0AKVvYb5RifEmQzRBVN/view'
+    url = 'https://drive.google.com/file/d/1Zv6ojBq4jFyXE0AKVvYb5RifEmQzRBVN/view?usp=sharing'
+    
     output = 'best.pth'  # Local filename to save the downloaded model
     gdown.download(url, output, quiet=False)  # Download the model
     checkpoint = torch.load(output) 
