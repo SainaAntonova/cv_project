@@ -1,13 +1,46 @@
 import streamlit as st
 from PIL import Image
 import torch
-from notebooks.model.loc_model.model import Classifier
+from torch import nn
+from torchvision.models import ResNet18_Weights, resnet18
 from notebooks.model.loc_model.preprocessing import preprocess
-import cv2 
+import cv2
 import numpy as np
 
+class Classifier(nn.Module):
+    def __init__(self):
+        super().__init__()
 
-@st.cache_resource
+        self.feature_extractor = resnet18(weights=ResNet18_Weights.DEFAULT)
+        self.feature_extractor = nn.Sequential(*list(self.feature_extractor.children())[:-2])
+        for param in self.feature_extractor.parameters():
+            param.requires_grad = False
+
+        self.clf = nn.Sequential(
+            nn.Linear(512 * 8 * 8, 256),
+            nn.Tanh(),
+            nn.Linear(256, 3)
+        )
+
+        self.box = nn.Sequential(
+            nn.Linear(512 * 8 * 8, 512),
+            nn.LeakyReLU(),
+            nn.Dropout(),
+            nn.Linear(512, 256),
+            nn.LeakyReLU(),
+            nn.Dropout(),
+            nn.Linear(256, 128),
+            nn.LeakyReLU(),
+            nn.Linear(128, 4),
+            nn.Sigmoid()
+        )
+
+    def forward(self, img):
+        embedding = self.feature_extractor(img)
+        logits = self.clf(torch.flatten(embedding, 1))
+        box_coords = self.box(torch.flatten(embedding, 1))
+        return logits, box_coords
+
 @st.cache_data
 def load_model():
     model = Classifier()
