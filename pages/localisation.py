@@ -8,7 +8,7 @@ import numpy as np
 
 
 
-@st.cache_resource()
+@st.cache_data
 def load_model():
     model = Classifier()
     # Загрузка состояния модели и оптимизатора
