@@ -45,7 +45,13 @@ class Classifier(nn.Module):
 def load_model():
     model = Classifier()
     # Загрузка состояния модели и оптимизатора
-    checkpoint = torch.load('notebooks/model/loc_model/best.pth')
+    url = 'https://drive.google.com/file/d/1Zv6ojBq4jFyXE0AKVvYb5RifEmQzRBVN/view'
+    output = 'best.pth'  # Local filename to save the downloaded model
+    gdown.download(url, output, quiet=False)  # Download the model
+    checkpoint = torch.load(output) 
+
+    
+    # checkpoint = torch.load('notebooks/model/loc_model/best.pth')
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=.9)
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[5, 10, 15, 20, 25])
 
