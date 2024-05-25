@@ -3,12 +3,24 @@ from PIL import Image
 import torch
 from torch import nn
 from torchvision.models import ResNet18_Weights, resnet18
-from notebooks.model.loc_model.preprocessing import preprocess
 import cv2
 import numpy as np
-import glob
+import time 
 
-# import gdown
+import torchvision.transforms as T
+
+preprocessing_func = T.Compose(
+    [
+        T.Resize((227,227)),
+        T.ToTensor()
+    ]
+)
+
+def preprocess(img):
+    return preprocessing_func(img)
+
+
+
 
 class Classifier(nn.Module):
     def __init__(self):
@@ -16,79 +28,47 @@ class Classifier(nn.Module):
 
         self.feature_extractor = resnet18(weights=ResNet18_Weights.DEFAULT)
         self.feature_extractor = nn.Sequential(*list(self.feature_extractor.children())[:-2])
+        # фризим слои, обучать их не будем (хотя технически можно)
         for param in self.feature_extractor.parameters():
-            param.requires_grad = False
+            param.requires_grad = True
 
         self.clf = nn.Sequential(
-            nn.Linear(512 * 8 * 8, 256),
-            nn.Tanh(),
-            nn.Linear(256, 3)
+            nn.Linear(512*8*8, 128),
+            nn.Sigmoid(),
+            nn.Linear(128, 3)
         )
 
         self.box = nn.Sequential(
-            nn.Linear(512 * 8 * 8, 512),
-            nn.LeakyReLU(),
-            nn.Dropout(),
-            nn.Linear(512, 256),
-            nn.LeakyReLU(),
-            nn.Dropout(),
-            nn.Linear(256, 128),
-            nn.LeakyReLU(),
+            nn.Linear(512*8*8, 128),
+            nn.Sigmoid(),
             nn.Linear(128, 4),
             nn.Sigmoid()
         )
 
     def forward(self, img):
-        embedding = self.feature_extractor(img)
-        logits = self.clf(torch.flatten(embedding, 1))
-        box_coords = self.box(torch.flatten(embedding, 1))
-        return logits, box_coords
-
-# @st.cache_data
-# def load_model():
-#     model = Classifier()
-#     # Загрузка состояния модели и оптимизатора
-#     url = 'https://drive.google.com/file/d/1Zv6ojBq4jFyXE0AKVvYb5RifEmQzRBVN/view?usp=sharing'
+        resnet_out = self.feature_extractor(img)
+        resnet_out = resnet_out.view(resnet_out.size(0), -1)
+        pred_classes = self.clf(resnet_out)
+        pred_boxes = self.box(resnet_out)
+        return pred_classes, pred_boxes
     
-#     output = 'best.pth'  # Local filename to save the downloaded model
-#     gdown.download(url, output, quiet=False)  # Download the model
-#     checkpoint = torch.load(output) 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    
-#     # checkpoint = torch.load('notebooks/model/loc_model/best.pth')
-#     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=.9)
-#     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[5, 10, 15, 20, 25])
-
-#     model.load_state_dict(checkpoint['model_state_dict'])
-#     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-#     lr_scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
-#     start_epoch = checkpoint['epoch']
-#     log = checkpoint['log']
-#     model.eval()
-#     return model, start_epoch
-
-@st.cache_resource()
+@st.cache_data
 def load_model():
     
     model = Classifier()
-    def load_model_parts(base_filename):
-        part_files = sorted(glob.glob('..\notebooks\model\loc_model'+ base_filename + '*.pth'))
 
-        state_dict = {}
-        for part_file in part_files:
-            with open(part_file, 'rb') as f:
-                part_state_dict = torch.load(f, map_location='cpu')  # Load with PyTorch
-                state_dict.update(part_state_dict)
-
-        return state_dict
-    
-    state_dict = load_model_parts('best')
-    model.load_state_dict(state_dict, strict=False)
+    checkpoint_path = 'notebooks/model/loc_model/best.pth'
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    model.load_state_dict(checkpoint)
+    model.to(device)
     model.eval()
-    start_epoch =0
-    return model, start_epoch
 
-model, start_epoch = load_model()
+    return model
+
+
+model = load_model()
 
 st.image("https://previews.123rf.com/images/foodandmore/foodandmore1705/foodandmore170500090/77253581-panoramic-wide-organic-food-background-concept-with-full-frame-pile-of-fresh-vegetables-and-fruits.jpg", use_column_width=True)
 st.markdown("""
@@ -133,24 +113,6 @@ with st.expander("Метрики"):
     st.write('  - mAP50: ???  - mAP50-95: ???')
 
 
-
-with st.sidebar:
-    image = st.file_uploader('Загрузите свою картинку', type=['jpg', 'jpeg', 'png'], accept_multiple_files=True)
-
-def predict(model, image, device='cpu'):
-    img = preprocess(image)
-
-    # Ensure img is a 4D tensor
-    if img.dim() == 3:
-        img = img.unsqueeze(0)  # Add batch dimension
-
-    with torch.no_grad():
-        img = img.to(device)
-        logits, coords = model(img)
-        logits = logits.cpu()
-        coords = coords.cpu()
-    return logits, coords
-
 label_dict = {
             'cucumber' : 0,
             'eggplant' : 1,
@@ -159,20 +121,50 @@ label_dict = {
 
 ix2cls = {v: k for k, v in label_dict.items()}
 
+
+
+def predict(image):
+    img = preprocess(image).unsqueeze(0).to(device)
+    with torch.no_grad():
+        start_time = time.time()
+        preds_cls, preds_reg = model(img)
+        end_time = time.time()
+
+    pred_class = preds_cls.argmax(dim=1).item()
+    img = img.squeeze().permute(1, 2, 0).cpu().numpy()
+    img = (img * 255).astype(np.uint8)  # Преобразование значений пикселей в диапазон [0, 255]
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)  # Переключаем обратно в BGR для OpenCV
+
+    pred_box_coords = (preds_reg[0] * 227).cpu().detach().numpy().astype('int')
+    pred_box = cv2.rectangle(
+        img.copy(), 
+        (pred_box_coords[0], pred_box_coords[1]),  # top left
+        (pred_box_coords[2], pred_box_coords[3]),  # bottom right
+        color=(255, 0, 0), thickness=2
+    )
+
+    # Преобразование изображения обратно в RGB для правильного отображения в Streamlit
+    pred_box = cv2.cvtColor(pred_box, cv2.COLOR_BGR2RGB)
+    pred_box = pred_box / 255.0  # Нормализация значений пикселей в диапазон [0, 1]
+
+    return pred_box, ix2cls[pred_class], end_time - start_time
+
+
+
+
 st.write('## Ваше изображение:')
-if image:
-    for uploaded_image in image:
-        image = Image.open(uploaded_image)
-        orig_width, orig_height = image.size
-        logits, coords = predict(model, image)
-        # Масштабирование координат предсказанного бокса
-        coords = coords.squeeze().numpy()
-        xmin, ymin, xmax, ymax = coords
-        pred_label = logits.argmax(1).item()
-        pred_class = ix2cls[pred_label]
-        image_np = np.array(image)
-        cv2.rectangle(image_np, (int(xmin*orig_width), int(ymin*orig_height)), (int(xmax*orig_width), int(ymax*orig_height)), (255, 0, 0), 1)
-        cv2.putText(image_np, pred_class, (int(xmin*orig_width), int(ymin*orig_height)-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-        image = Image.fromarray(image_np)
-        st.image(image)
-        st.write(f'Количество эпох: {start_epoch}')
+
+with st.sidebar:
+    uploaded_files = st.file_uploader('Загрузите свою картинку', type=['jpg', 'jpeg', 'png'], accept_multiple_files=True)
+
+def display_results(image, pred_label, inference_time):
+    st.title(pred_label)
+    st.image(image, use_column_width=True)
+    st.write(f"Время предсказания: {inference_time:.4f} секунд")
+
+
+if uploaded_files is not None:
+    for uploaded_file in uploaded_files:
+        image = Image.open(uploaded_file)
+        predicted_img, predicted_class, inference_time = predict(image)
+        display_results(predicted_img, predicted_class, inference_time)
