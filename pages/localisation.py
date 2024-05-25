@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 
 
-
+@st.cache_resource
 @st.cache_data
 def load_model():
     model = Classifier()
